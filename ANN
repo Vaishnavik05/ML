@@ -1,0 +1,94 @@
+import numpy as np
+
+# Activation function and its derivative
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def sigmoid_derivative(x):
+    return x * (1 - x)
+
+# Take dynamic input for the number of input and hidden nodes
+num_inputs = int(input("Enter number of input nodes: "))
+num_hidden = int(input("Enter number of hidden nodes: "))
+
+# Input layer values
+inputs = [float(input(f"Enter value for input x{i+1}: ")) for i in range(num_inputs)]
+
+# Hidden layer weights and biases
+hidden_weights = [
+    [float(input(f"Enter weight w{i+1}{j+1} (from x{i+1} to h{j+1}): ")) 
+     for j in range(num_hidden)] 
+    for i in range(num_inputs)
+]
+hidden_biases = [float(input(f"Enter bias theta_h{j+1}: ")) for j in range(num_hidden)]
+
+# Output layer weights and bias
+output_weights = [float(input(f"Enter weight w{j+1}o (from h{j+1} to output): ")) 
+                  for j in range(num_hidden)]
+output_bias = float(input("Enter bias theta_o: "))
+
+# Learning rate and target output
+eta = float(input("Enter learning rate (eta): "))
+y_target = float(input("Enter target output (y_target): "))
+
+# Forward pass function
+def forward_pass():
+    # Calculate hidden layer outputs
+    hidden_z = [
+        sum(inputs[i] * hidden_weights[i][j] for i in range(num_inputs)) + hidden_biases[j] 
+        for j in range(num_hidden)
+    ]
+    hidden_outputs = [sigmoid(z) for z in hidden_z]
+    
+    # Calculate output
+    output_z = sum(hidden_outputs[j] * output_weights[j] for j in range(num_hidden)) + output_bias
+    output_a = sigmoid(output_z)
+    
+    print(f"\nHidden layer outputs: {hidden_outputs}")
+    print(f"Output (a): {output_a:.4f}")
+    return hidden_outputs, output_a
+
+# Weight update function
+def update_weights(hidden_outputs, output_a):
+    global hidden_weights, hidden_biases, output_weights, output_bias
+
+    # Calculate errors
+    error_output = y_target - output_a
+    delta_output = error_output * sigmoid_derivative(output_a)
+    delta_hidden = [
+        delta_output * output_weights[j] * sigmoid_derivative(hidden_outputs[j]) 
+        for j in range(num_hidden)
+    ]
+    
+    # Update output weights and bias
+    for j in range(num_hidden):
+        output_weights[j] += eta * delta_output * hidden_outputs[j]
+    output_bias += eta * delta_output
+    
+    # Update hidden weights and biases
+    for i in range(num_inputs):
+        for j in range(num_hidden):
+            hidden_weights[i][j] += eta * delta_hidden[j] * inputs[i]
+    for j in range(num_hidden):
+        hidden_biases[j] += eta * delta_hidden[j]
+    
+    print(f"Error: {error_output:.4f}")
+    return error_output
+
+# Training process
+num_epochs = int(input("Enter the number of epochs: "))
+for epoch in range(1, num_epochs + 1):
+    hidden_outputs, output_a = forward_pass()
+    error_output = update_weights(hidden_outputs, output_a)
+    print(f"Epoch {epoch}: Output = {output_a:.4f}, Error = {error_output:.4f}")
+
+# Final weights and biases
+print("\nFinal weights and biases after training:")
+for i in range(num_inputs):
+    for j in range(num_hidden):
+        print(f"Hidden weight w{i+1}{j+1}: {hidden_weights[i][j]:.4f}")
+for j in range(num_hidden):
+    print(f"Hidden bias theta_h{j+1}: {hidden_biases[j]:.4f}")
+for j in range(num_hidden):
+    print(f"Output weight w{j+1}o: {output_weights[j]:.4f}")
+print(f"Output bias theta_o: {output_bias:.4f}")
